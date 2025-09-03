@@ -3,14 +3,11 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
 import ExcelJS from "exceljs";
 
-
 puppeteer.use(StealthPlugin());
-
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
 
 async function scrapeCompanyDetails(page, url) {
   try {
@@ -28,7 +25,6 @@ async function scrapeCompanyDetails(page, url) {
           const label = tds[0].innerText.trim();
           let value = tds[1].innerText.trim();
 
-          // Bỏ chữ "Ẩn thông tin" hoặc "Bị ẩn"
           if (label.includes("Điện thoại")) {
             value = value
               .replace("Ẩn thông tin", "")
@@ -36,7 +32,6 @@ async function scrapeCompanyDetails(page, url) {
               .trim();
           }
 
-      
           if (label.includes("Ngành nghề chính")) {
             value = value.replace(/\n/g, " ").trim();
           }
@@ -54,7 +49,6 @@ async function scrapeCompanyDetails(page, url) {
         }
       });
 
-     
       if (
         !d.phone ||
         d.phone === "" ||
@@ -72,7 +66,6 @@ async function scrapeCompanyDetails(page, url) {
     return null;
   }
 }
-
 
 async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
   const workbook = new ExcelJS.Workbook();
@@ -93,7 +86,6 @@ async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
   ];
   ws.addRow(header);
 
- 
   const headerRow = ws.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
   headerRow.fill = {
@@ -119,7 +111,6 @@ async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
     ]);
   });
 
-
   ws.columns.forEach((col) => {
     let maxLength = 15;
     col.eachCell({ includeEmpty: true }, (cell) => {
@@ -140,11 +131,10 @@ async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
   console.log(` Đã xuất file Excel: ${fileName}`);
 }
 
-
 async function crawlCompanyLinks(page) {
   const links = [];
   let pageNum = 1;
-  const maxPages = 11; 
+  const maxPages = 11;
 
   while (pageNum <= maxPages) {
     const url = `https://masothue.com/tra-cuu-ma-so-thue-theo-tinh/ha-noi-7?page=${pageNum}`;
@@ -185,7 +175,6 @@ async function crawlCompanyLinks(page) {
   return links;
 }
 
-
 async function crawlCompanyDetails(browser, links) {
   const page = await browser.newPage();
   const results = [];
@@ -194,7 +183,7 @@ async function crawlCompanyDetails(browser, links) {
     const detail = await scrapeCompanyDetails(page, link);
     if (detail) results.push(detail);
     console.log(` Đã thu được ${results.length} công ty`);
-    await delay(5000 + Math.random() * 5000); 
+    await delay(5000 + Math.random() * 5000);
   }
 
   fs.writeFileSync(
@@ -207,7 +196,6 @@ async function crawlCompanyDetails(browser, links) {
   await exportToExcel(results);
 }
 
-
 async function main() {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -216,7 +204,6 @@ async function main() {
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/139.0.0.0 Safari/537.36"
   );
 
- 
   const links = await crawlCompanyLinks(page);
   await crawlCompanyDetails(browser, links);
 
