@@ -3,15 +3,15 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
 import ExcelJS from "exceljs";
 
-// Kích hoạt stealth plugin
+
 puppeteer.use(StealthPlugin());
 
-// Delay ngẫu nhiên
+
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Crawl chi tiết 1 công ty
+
 async function scrapeCompanyDetails(page, url) {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
@@ -36,7 +36,7 @@ async function scrapeCompanyDetails(page, url) {
               .trim();
           }
 
-          // Bỏ ký tự xuống dòng trong ngành nghề
+      
           if (label.includes("Ngành nghề chính")) {
             value = value.replace(/\n/g, " ").trim();
           }
@@ -54,7 +54,7 @@ async function scrapeCompanyDetails(page, url) {
         }
       });
 
-      // Bỏ công ty không có phone hoặc phone bị che
+     
       if (
         !d.phone ||
         d.phone === "" ||
@@ -68,12 +68,12 @@ async function scrapeCompanyDetails(page, url) {
 
     return data;
   } catch (err) {
-    console.error("❌ Lỗi crawl chi tiết:", err.message);
+    console.error(" Lỗi crawl chi tiết:", err.message);
     return null;
   }
 }
 
-// Export Excel với format đẹp
+
 async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
   const workbook = new ExcelJS.Workbook();
   const ws = workbook.addWorksheet("Hanoi Companies");
@@ -93,7 +93,7 @@ async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
   ];
   ws.addRow(header);
 
-  // Style cho header
+ 
   const headerRow = ws.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
   headerRow.fill = {
@@ -119,7 +119,7 @@ async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
     ]);
   });
 
-  // Auto width cho từng cột + viền
+
   ws.columns.forEach((col) => {
     let maxLength = 15;
     col.eachCell({ includeEmpty: true }, (cell) => {
@@ -137,14 +137,14 @@ async function exportToExcel(data, fileName = "hanoi_companies.xlsx") {
   });
 
   await workbook.xlsx.writeFile(fileName);
-  console.log(`🎉 Đã xuất file Excel: ${fileName}`);
+  console.log(` Đã xuất file Excel: ${fileName}`);
 }
 
-// Bước 1: Crawl danh sách liên kết công ty
+
 async function crawlCompanyLinks(page) {
   const links = [];
   let pageNum = 1;
-  const maxPages = 11; // ✅ Crawl đủ 11 trang
+  const maxPages = 11; 
 
   while (pageNum <= maxPages) {
     const url = `https://masothue.com/tra-cuu-ma-so-thue-theo-tinh/ha-noi-7?page=${pageNum}`;
@@ -164,14 +164,14 @@ async function crawlCompanyLinks(page) {
       );
 
       if (!pageLinks.length) {
-        console.log("✅ Hết dữ liệu hoặc bị chặn, dừng danh sách.");
+        console.log(" Hết dữ liệu hoặc bị chặn, dừng danh sách.");
         break;
       }
 
       links.push(...pageLinks);
       pageNum++;
     } catch (err) {
-      console.error("⚠️ Lỗi tại trang danh sách:", err.message);
+      console.error(" Lỗi tại trang danh sách:", err.message);
       break;
     }
   }
@@ -181,11 +181,11 @@ async function crawlCompanyLinks(page) {
     JSON.stringify(links, null, 2),
     "utf-8"
   );
-  console.log(`✅ Đã lưu ${links.length} link công ty vào company_links.json`);
+  console.log(` Đã lưu ${links.length} link công ty vào company_links.json`);
   return links;
 }
 
-// Bước 2: Crawl chi tiết từng công ty với delay 5–10s
+
 async function crawlCompanyDetails(browser, links) {
   const page = await browser.newPage();
   const results = [];
@@ -193,8 +193,8 @@ async function crawlCompanyDetails(browser, links) {
   for (const link of links) {
     const detail = await scrapeCompanyDetails(page, link);
     if (detail) results.push(detail);
-    console.log(`✅ Đã thu được ${results.length} công ty`);
-    await delay(5000 + Math.random() * 5000); // 5–10s
+    console.log(` Đã thu được ${results.length} công ty`);
+    await delay(5000 + Math.random() * 5000); 
   }
 
   fs.writeFileSync(
@@ -202,12 +202,12 @@ async function crawlCompanyDetails(browser, links) {
     JSON.stringify(results, null, 2),
     "utf-8"
   );
-  console.log(`🎉 Hoàn tất! Đã ghi ${results.length} công ty vào file JSON`);
+  console.log(` Hoàn tất! Đã ghi ${results.length} công ty vào file JSON`);
 
   await exportToExcel(results);
 }
 
-// Main
+
 async function main() {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -216,7 +216,7 @@ async function main() {
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/139.0.0.0 Safari/537.36"
   );
 
-  // Crawl tối đa 11 page
+ 
   const links = await crawlCompanyLinks(page);
   await crawlCompanyDetails(browser, links);
 
